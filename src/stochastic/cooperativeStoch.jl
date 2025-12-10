@@ -9,7 +9,7 @@ data: structure of data
 """
 
 # function build_specific_model!(::AbstractGroupCO, ECModel::AbstractEC,optimizer;
-function build_specific_model!(::AbstractGroupCO, ECModel::StochasticEC,optimizer;
+function build_specific_model!(::AbstractGroupCO, ECModel::StochasticEC;
     control_first_risimulation=false,
     x_fixed=Dict{Tuple{String, String}, Float64}(),
     control_MC=false,
@@ -431,8 +431,6 @@ function build_specific_model!(::AbstractGroupCO, ECModel::StochasticEC,optimize
         @objective(model, Max, SW)
     
     end
-    
-    set_optimizer(model,optimizer)
 
     ECModel.deterministic_model = DEP(model)
 
