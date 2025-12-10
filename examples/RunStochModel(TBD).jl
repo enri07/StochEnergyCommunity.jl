@@ -29,6 +29,90 @@
 using EnergyCommunity, JuMP
 using HiGHS, Plots
 
+## Create basic example for the Energy Community in the stoch_data folder
+
+folder = "stoch_data"
+create_stoch_example_data(folder, config_name="default")
+
+## Parameters
+
+input_file = "$folder/energy_community_model.yml"  # Input file
+
+output_file_isolated = "outputs/output_file_SNC.xlsx"  # Output file - model users alone
+output_plot_isolated = "outputs/Img/plot_user_{:s}_SNC.png"  # Output png file of plot - model users alone
+
+output_file_combined = "outputs/output_file_SCO.xlsx"  # Output file - model Energy community
+output_plot_combined = "outputs/Img/plot_user_{:s}_SCO.pdf"  # Output png file of plot - model energy community
+
+# Generate the set of scenarios used to optimize the EC
+scenarios = build_scenarios(data)
+
+## Model CO
+
+## Initialization
+
+# Read data from excel file
+ECModel_SCO = StochasticEC(input_file, EnergyCommunity.GroupCO(), scenarios, optimizer = HiGHS.Optimizer)
+
+# build CO model
+build_specific_model!(GroupCO(),ECModel_SCO)
+
+# optimize CO model
+optimize!(ECModel)
+
+"""
+# create plots of CO model
+plot(ECModel, output_plot_combined)
+
+# print summary
+print_summary(ECModel)
+
+# save summary data
+save_summary(ECModel, output_file_combined)
+
+# Plot sankey plot of CO model
+plot_sankey(ECModel)
+
+# DataFrame of the business plan
+business_plan(ECModel)
+
+# plot 20 years business plan of CO model
+business_plan_plot(ECModel)
+
+## Model NC
+
+# create NonCooperative model
+NC_Model = ModelEC(ECModel, EnergyCommunity.GroupNC())
+
+# build NC model
+build_model!(NC_Model)
+
+# optimize NC model
+optimize!(NC_Model)
+
+# create plots of NC model
+plot(NC_Model, output_plot_isolated)
+
+# print summary of NC model
+print_summary(NC_Model)
+
+# save summary of NC model
+save_summary(NC_Model, output_file_isolated)
+
+# plot Sankey plot of NC model
+plot_sankey(NC_Model)
+
+# DataFrame of the business plan of NC model
+business_plan(NC_Model)
+
+# plot business plan of NC model
+business_plan_plot(NC_Model)
+
+
+
+
+
+
 # Data extraction
 file_name = "./src/stochastic/stoch_data/energy_community_model.yml"
 data = read_input(file_name)
