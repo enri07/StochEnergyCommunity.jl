@@ -58,6 +58,8 @@ general(d::AbstractDict) = field(d, "general")
 users(d::AbstractDict) = field(d, "users")
 "Function to get the market configuration"
 market(d::AbstractDict) = field(d, "market")
+"Function to get the specific stochastic dictionary"
+stoch_params(d::AbstractDict) = field(d, "stoch_params")
 "Function to get the profile dictionary"
 profiles(d::AbstractDict) = field_d(d, "profile")
 "Auxiliary function to check if the key 'type' is available in the dictionary d, otherwise false"
@@ -271,8 +273,9 @@ function read_input(file_name::AbstractString)
         end
     end
 
-    # TODO manage this discrepancy between stochastic and deterministic yaml
     change_profile!(gen_data,opt_data)
+
+    # TODO manage this discrepancy between stochastic and deterministic yaml
     if !haskey(market_data, "profile")
         for c_name in keys(market_data)
             change_profile!(market_data[c_name], opt_data)
