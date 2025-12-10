@@ -439,3 +439,89 @@ function build_specific_model!(::AbstractGroupCO, ECModel::StochasticEC, optimiz
     return ECModel
 end
 
+""" 
+    print_summary(::AbstractGroupCO, ECModel::AbstractEC)
+
+Function to print the main results of the stochastic model
+"""
+function print_summary(::AbstractGroupCO, ECModel::StochasticEC)
+
+    # get main parameters
+    gen_data, users_data, market_data = explode_data(ECModel.data)
+    n_users = length(users_data)
+    init_step = field(gen_data, "init_step")
+    final_step = field(gen_data, "final_step")
+    n_steps = final_step - init_step + 1
+    project_lifetime = field(gen_data, "project_lifetime")
+
+    # Set definitions
+    user_set = ECModel.user_set
+    year_set = 1:project_lifetime
+    time_set = 1:n_steps
+    peak_categories = profile(market_data,"peak_categories")
+    peak_set = unique(peak_categories)
+
+    # Number of scenarios
+    n_scen_s = ECModel.n_scen_s
+    n_scen_eps = ECModel.n_scen_eps
+    n_scen = n_scen_s * n_scen_eps
+
+    # subscript label (used in the results array)
+    num_sub = Array{String}(undef,_n_scen)
+    for i = 1:_n_scen
+        if i<10
+            num_sub[i] = string(Char(0x02080+i))
+        else
+            first_n = (i - mod(i,10))/10
+            second_n = mod(i,10)
+            num_sub[i] = Char(0x02080+first_n)*Char(0x02080+second_n)
+        end
+    end
+
+    # Set definition when optional value is not included
+    user_set = ECModel.user_set
+
+    results_EC = ECModel.results
+
+    scenarios = ECModel.scenarios
+
+    # get the installed capacities for users and EC
+    x_us_EC = calculate_x_tot(ECModel)
+
+    # get the final objective value
+    obj_value = sum(results_EC[Symbol("SW"*num_sub[scen])] * probability(scenarios[scen]) for scen = 1:n_scen)
+
+    # set of all types of assets among the users
+    asset_set_unique = unique([name for u in user_set for name in device_names(users_data[u])])
+
+    # format types to print at screen the results
+    printf_code_user = string("{:18s}: {: 7.2e}", join([", {: 7.2e}" for i in 1:length(user_set) if i > 1]))
+    printf_code_agg = string("{:18s}: {: 7.2e}")
+    printf_code_description = string("{:<18s}: {:>9s}", join([", {:>9s}" for i in 1:length(user_set) if i > 1]))
+    printf_code_scenario = string("{: 7.2e}", join([", {: 7.2e}" for i = 1:6 if i > 1]))
+
+    ## start printing
+
+    # aggregated results
+    printfmtln("\nRESULTS - AGGREGATOR")
+    printfmtln(printf_code_agg, "SWtot [k€]", obj_value/1000)  # Total social welfare
+    
+    printfmtln("\nSCENARIO S - SCENARIO EPS - SW - P_shared_agg - P_sq_P_agg - P_sq_N_agg")
+    for scen = 1:n_scen
+        printfmtln(printf_code_scenario,  convert_scen(n_scen_s,n_scen_eps,scen)[1], convert_scen(n_scen_s,n_scen_eps,scen)[2],
+            probability(scenarios[scen]), results_EC[Symbol("SW"*num_sub[scen])], 
+            sum(ECModel.results[Symbol("P_shared_agg"*num_sub[scen])]) * time_res * energy_weight,
+            sum(ECModel.results[Symbol("P_sq_P_agg"*num_sub[scen])]) * time_res * energy_weight,
+            sum(ECModel.results[Symbol("P_sq_N_agg"*num_sub[scen])]) * time_res * energy_weight)
+    end
+
+    # results of the users
+    printfmtln("\n\nRESULTS - USER")
+
+    printfmtln(printf_code_description, "USER", [u for u in user_set]...)  # heading
+    for a in asset_set_unique  # print capacities of each asset by user
+        printfmtln(printf_code_user, a, [
+            (a in device_names(users_data[u])) ? x_us_EC[u, a] * field_component(users_data[u], a, "nom_capacity") : 0
+                for u in user_set]...)
+    end
+end
