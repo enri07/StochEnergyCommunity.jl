@@ -43,12 +43,11 @@ output_file_isolated = "outputs/output_file_SNC.xlsx"  # Output file - model use
 output_file_combined = "outputs/output_file_SCO.xlsx"  # Output file - model Energy community
 
 output_plot_ren = "outputs/Img/plot_stoch_renewable_assets.png"  # Output png file of plot - renewable assets
-output_plot_batt = "outputs/Img/plot_stoch_battery_assets.pdf"  # Output png file of plot - battery assets
+output_plot_batt = "outputs/Img/plot_stoch_battery_assets.png"  # Output png file of plot - battery assets
 
 mkpath("docs/src/examples/outputs/Img")  # create output folder if it does not exist
 # Generate the set of scenarios used to optimize the EC
 scenarios = build_scenarios(input_file)
-
 ## Model SCO
 
 ## Initialization
@@ -80,7 +79,7 @@ build_base_model!(ECModel_SNC, HiGHS.Optimizer)
 optimize_deterministic_ECmodel(ECModel_SNC)
 
 # print summary of SNC model
-# print_summary(ECModel_SNC)
+print_summary(ECModel_SNC)
 
 # Save results
 print_stochastic_results(output_file_isolated, ECModel_SNC)
@@ -95,9 +94,6 @@ x_tot_SCO = calculate_x_tot(ECModel_SCO)
 # Evaluate the installed capacity of the entire EC - model users alone
 x_tot_SNC = calculate_x_tot(ECModel_SNC)
 
-# [:red, :blue]
-# [:green]
-
 # Plot installed renewable assets in both SCO and SNC versions
-plot_resource(output_plot_ren, ["PV","wind"], ECModel_SCO.users_data, x_tot_SCO, x_tot_SNC, colors[1:2]) # renewable asset
-plot_resource(output_plot_batt, ["batt"], ECModel_SCO.users_data, x_tot_SCO, x_tot_SNC, [colors[3]]) #battery
+plot_resource(output_plot_ren, ["PV","wind"], ECModel_SCO, x_tot_SCO, x_tot_SNC, colors[1:2]) # renewable asset
+plot_resource(output_plot_batt, ["batt"], ECModel_SCO, x_tot_SCO, x_tot_SNC, [colors[3]]) #battery

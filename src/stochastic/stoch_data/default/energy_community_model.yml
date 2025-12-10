@@ -6,8 +6,8 @@ general:  # general input parameters
   user_set: [user1, user2, user3]  # list of users for the simulation
   
   stoch_params:
-    n_s: 1 # number of scenarios s
-    n_eps: 1 # number of scenarios epsilon
+    n_s: 2 # number of scenarios s
+    n_eps: 2 # number of scenarios epsilon
     uncertain_var: L # variable on which we would like to test uncertainty: L for load demand, P for PV and W for wind
     mean_load: 1.0  # long-term mean load
     sigma_load: 0.3 # long-term std load

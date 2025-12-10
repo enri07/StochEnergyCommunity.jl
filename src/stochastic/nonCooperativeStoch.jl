@@ -811,3 +811,111 @@ function calculate_x_tot(ECModel::AbstractEC)
 
     return x_us_EC
 end
+
+
+""" 
+    print_summary(::AbstractGroupCO, ECModel::AbstractEC)
+
+Function to print the main results of the stochastic model
+"""
+function print_summary(::AbstractGroupNC, ECModel::StochasticEC)
+
+    # get main parameters
+    gen_data, users_data, market_data = explode_data(ECModel.data)
+    n_users = length(users_data)
+    init_step = field(gen_data, "init_step")
+    final_step = field(gen_data, "final_step")
+    n_steps = final_step - init_step + 1
+    project_lifetime = field(gen_data, "project_lifetime")
+    time_res = profile(market_data, "time_res")[1]
+    energy_weight = profile(market_data, "energy_weight")[1]
+
+    # Set definitions
+    user_set = ECModel.user_set
+    year_set = 1:project_lifetime
+    time_set = 1:n_steps
+    peak_categories = profile(market_data,"peak_categories")
+    peak_set = unique(peak_categories)
+
+    # Number of scenarios
+    n_scen_s = ECModel.n_scen_s
+    n_scen_eps = ECModel.n_scen_eps
+    n_scen = n_scen_s * n_scen_eps
+
+
+    # subscript label (used in the results array)
+    num_sub = Array{String}(undef,n_scen)
+    for i = 1:n_scen
+        if i<10
+            num_sub[i] = string(Char(0x02080+i))
+        else
+            first_n = (i - mod(i,10))/10
+            second_n = mod(i,10)
+            num_sub[i] = Char(0x02080+first_n)*Char(0x02080+second_n)
+        end
+    end
+
+    # Set definition when optional value is not included
+    user_set = ECModel.user_set
+
+    results_EC = ECModel.results
+
+    scenarios = ECModel.scenarios
+
+    # get the installed capacities for users and EC
+    x_us_EC = calculate_x_tot(ECModel)
+
+    # get the final objective value
+    obj_value = sum(results_EC[Symbol("SW"*num_sub[scen])] * probability(scenarios[scen]) for scen = 1:n_scen)
+
+    # set of all types of assets among the users
+    asset_set_unique = unique([name for u in user_set for name in device_names(users_data[u])])
+
+    # format types to print at screen the results
+    printf_code_user = string("{:18s}: {: 7.2e}", join([", {: 7.2e}" for i in 1:length(user_set) if i > 1]))
+    printf_code_agg = string("{:18s}: {: 7.2e}")
+    printf_code_description = string("{:<18s}: {:>9s}", join([", {:>9s}" for i in 1:length(user_set) if i > 1]))
+
+    ## start printing
+
+    # aggregated results
+    printfmtln("\nRESULTS - AGGREGATOR")
+    printfmtln(printf_code_agg, "SWtot [k€]", obj_value/1000)  # Total social welfare
+
+    # Header with better spacing
+    printfmtln("\n{:^10s} {:^10s} {:^12s} {:^12s} {:^15s} {:^15s}", 
+        "SCEN S", "SCEN EPS", "Probability", "SW [k€]", "P_sq_P [kWh]", "P_sq_N [kWh]")
+    printfmtln(repeat("-", 100))
+
+    for scen = 1:n_scen
+        s, eps = convert_scen(n_scen_s, n_scen_eps, scen)
+        printfmtln("{:^10d} {:^10d} {:^12.4f} {:^12.2f} {:^15.2f} {:^15.2f}",
+            s,  # Integer format for scenario s
+            eps,  # Integer format for scenario eps
+            probability(scenarios[scen]), 
+            results_EC[Symbol("SW"*num_sub[scen])] / 1000,  # Convert to k€
+            sum(ECModel.results[Symbol("P_sq_P_us" * num_sub[scen])]) * time_res * energy_weight,
+            sum(ECModel.results[Symbol("P_sq_N_us" * num_sub[scen])]) * time_res * energy_weight)
+    end
+    printfmtln(repeat("-", 100))
+
+    # results of the users
+    printfmtln("\n\nRESULTS - USERS")
+
+    # Header formattato con larghezza fissa per colonne
+    header_format = "{:<20s}" * repeat(" {:>12s}", length(user_set))
+    printfmtln(header_format, "ASSET", [u for u in user_set]...)
+    printfmtln(repeat("-", 20 + 13 * length(user_set)))
+
+    # Formato per i valori: asset name + capacità per ogni utente
+    value_format = "{:<20s}" * repeat(" {:>12.2f}", length(user_set))
+
+    for a in asset_set_unique  # print capacities of each asset by user
+        printfmtln(value_format, a, [
+            (a in device_names(users_data[u])) ? 
+                x_us_EC[u, a] * field_component(users_data[u], a, "nom_capacity") : 
+                0.0
+            for u in user_set]...)
+    end
+    printfmtln(repeat("-", 20 + 13 * length(user_set)))
+end
