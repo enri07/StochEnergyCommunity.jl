@@ -39,7 +39,7 @@ module EnergyCommunity
     
     # scenario sampling for stochastic models
     # sampler method
-    include("stochastic/point_Scen_eps_sampler.jl")
+    include("stochastic/scenarios_generator.jl")
     # scenario definition
     include("stochastic/scenario_definition.jl")
 
