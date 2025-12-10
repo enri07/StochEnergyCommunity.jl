@@ -453,6 +453,8 @@ function print_summary(::AbstractGroupCO, ECModel::StochasticEC)
     final_step = field(gen_data, "final_step")
     n_steps = final_step - init_step + 1
     project_lifetime = field(gen_data, "project_lifetime")
+    time_res = profile(market_data, "time_res")[1]
+    energy_weight = profile(market_data, "energy_weight")[1]
 
     # Set definitions
     user_set = ECModel.user_set
@@ -467,8 +469,8 @@ function print_summary(::AbstractGroupCO, ECModel::StochasticEC)
     n_scen = n_scen_s * n_scen_eps
 
     # subscript label (used in the results array)
-    num_sub = Array{String}(undef,_n_scen)
-    for i = 1:_n_scen
+    num_sub = Array{String}(undef,n_scen)
+    for i = 1:n_scen
         if i<10
             num_sub[i] = string(Char(0x02080+i))
         else
@@ -498,30 +500,49 @@ function print_summary(::AbstractGroupCO, ECModel::StochasticEC)
     printf_code_user = string("{:18s}: {: 7.2e}", join([", {: 7.2e}" for i in 1:length(user_set) if i > 1]))
     printf_code_agg = string("{:18s}: {: 7.2e}")
     printf_code_description = string("{:<18s}: {:>9s}", join([", {:>9s}" for i in 1:length(user_set) if i > 1]))
-    printf_code_scenario = string("{: 7.2e}", join([", {: 7.2e}" for i = 1:6 if i > 1]))
 
     ## start printing
 
     # aggregated results
     printfmtln("\nRESULTS - AGGREGATOR")
     printfmtln(printf_code_agg, "SWtot [k€]", obj_value/1000)  # Total social welfare
-    
-    printfmtln("\nSCENARIO S - SCENARIO EPS - SW - P_shared_agg - P_sq_P_agg - P_sq_N_agg")
+
+    # Header with better spacing
+    printfmtln("\n{:^10s} {:^10s} {:^12s} {:^12s} {:^15s} {:^15s} {:^15s}", 
+        "SCEN S", "SCEN EPS", "Probability", "SW [k€]", 
+        "P_shared [kWh]", "P_sq_P [kWh]", "P_sq_N [kWh]")
+    printfmtln(repeat("-", 100))
+
     for scen = 1:n_scen
-        printfmtln(printf_code_scenario,  convert_scen(n_scen_s,n_scen_eps,scen)[1], convert_scen(n_scen_s,n_scen_eps,scen)[2],
-            probability(scenarios[scen]), results_EC[Symbol("SW"*num_sub[scen])], 
+        s, eps = convert_scen(n_scen_s, n_scen_eps, scen)
+        printfmtln("{:^10d} {:^10d} {:^12.4f} {:^12.2f} {:^15.2f} {:^15.2f} {:^15.2f}",
+            s,  # Integer format for scenario s
+            eps,  # Integer format for scenario eps
+            probability(scenarios[scen]), 
+            results_EC[Symbol("SW"*num_sub[scen])] / 1000,  # Convert to k€
             sum(ECModel.results[Symbol("P_shared_agg"*num_sub[scen])]) * time_res * energy_weight,
             sum(ECModel.results[Symbol("P_sq_P_agg"*num_sub[scen])]) * time_res * energy_weight,
             sum(ECModel.results[Symbol("P_sq_N_agg"*num_sub[scen])]) * time_res * energy_weight)
     end
+    printfmtln(repeat("-", 100))
 
     # results of the users
-    printfmtln("\n\nRESULTS - USER")
+    printfmtln("\n\nRESULTS - USERS")
 
-    printfmtln(printf_code_description, "USER", [u for u in user_set]...)  # heading
+    # Header formattato con larghezza fissa per colonne
+    header_format = "{:<20s}" * repeat(" {:>12s}", length(user_set))
+    printfmtln(header_format, "ASSET", [u for u in user_set]...)
+    printfmtln(repeat("-", 20 + 13 * length(user_set)))
+
+    # Formato per i valori: asset name + capacità per ogni utente
+    value_format = "{:<20s}" * repeat(" {:>12.2f}", length(user_set))
+
     for a in asset_set_unique  # print capacities of each asset by user
-        printfmtln(printf_code_user, a, [
-            (a in device_names(users_data[u])) ? x_us_EC[u, a] * field_component(users_data[u], a, "nom_capacity") : 0
-                for u in user_set]...)
+        printfmtln(value_format, a, [
+            (a in device_names(users_data[u])) ? 
+                x_us_EC[u, a] * field_component(users_data[u], a, "nom_capacity") : 
+                0.0
+            for u in user_set]...)
     end
+    printfmtln(repeat("-", 20 + 13 * length(user_set)))
 end

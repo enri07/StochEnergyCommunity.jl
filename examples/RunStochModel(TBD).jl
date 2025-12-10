@@ -63,7 +63,7 @@ build_specific_model!(GroupCO(),ECModel_SCO, HiGHS.Optimizer)
 optimize_deterministic_ECmodel(ECModel_SCO)
 
 # print summary
-# print_summary(ECModel_SCO)
+print_summary(ECModel_SCO)
 
 # Save results
 print_stochastic_results(output_file_combined, ECModel_SCO)
@@ -90,14 +90,14 @@ print_stochastic_results(output_file_isolated, ECModel_SNC)
 colors = palette(:default)
 
 # Evaluate the installed capacity of the entire EC - model Energy community
-x_tot_SCO = calculate_x_tot(EC_Cooperative)
+x_tot_SCO = calculate_x_tot(ECModel_SCO)
 
 # Evaluate the installed capacity of the entire EC - model users alone
-x_tot_SNC = calculate_x_tot(EC_NonCooperative)
+x_tot_SNC = calculate_x_tot(ECModel_SNC)
 
 # [:red, :blue]
 # [:green]
 
 # Plot installed renewable assets in both SCO and SNC versions
-plot_resource(output_plot_ren, users_data, ["PV","wind"], x_tot_SCO, x_tot_SNC, colors[1:2]) # renewable asset
-plot_resource(output_plot_batt, users_data, ["batt"], x_tot_SCO, x_tot_SNC, [colors[3]]) #battery
+plot_resource(output_plot_ren, ["PV","wind"], ECModel_SCO.users_data, x_tot_SCO, x_tot_SNC, colors[1:2]) # renewable asset
+plot_resource(output_plot_batt, ["batt"], ECModel_SCO.users_data, x_tot_SCO, x_tot_SNC, [colors[3]]) #battery

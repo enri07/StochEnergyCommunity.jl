@@ -237,6 +237,88 @@ end
 
     Plot the installed capacity by each user and community for the resources in asset
 """
+# function plot_resource(
+#     output_file::String,
+#     asset::Array{String},
+#     users_data,
+#     x_CO,
+#     x_NC,
+#     colors
+#     )
+
+#     user_set = collect(keys(users_data))
+#     n_users = length(user_set)
+#     n_resource = length(asset)
+
+#     max_installed_us_CO = maximum((has_asset(users_data[u], a)) ? x_CO[u,a] : 0.0 for u in user_set for a in asset)
+#     max_installed_us_NC = maximum((has_asset(users_data[u], a)) ? x_NC[u,a] : 0.0 for u in user_set for a in asset)
+#     max_installed_us = max(max_installed_us_CO,max_installed_us_NC)
+
+#     # Create the grid for the plot
+#     f = Figure(size = (1500, 400))
+
+#     gEC = f[1,1] = GridLayout()
+#     gusers = f[1,2:n_users+1] = GridLayout()
+#     gLegend = f[1,n_users+2] = GridLayout()
+
+#     # adding barplot for EC
+#     axEC = Axis(gEC[1,1],
+#         ylabel = "Capacity [kW]",
+#         xticks = (1:2, ["CO","NC"]))
+    
+#     Label(gEC[1,1,Top()], "Community", valign = :bottom, font = :bold, padding = (0, 0, 5, 0))
+
+#     for j = 1:n_resource
+#         barplot!(axEC, [1,2], [x_CO[EC_CODE, asset[j]],x_NC[EC_CODE, asset[j]]],
+#             gap = 0.05,
+#             label = asset[j],
+#             color = colors[j])
+#     end
+
+#     hidexdecorations!(axEC, ticks=false, ticklabels=false)
+
+#     ylims!(axEC, low = 0)
+
+#     # adding barplot for users
+
+#     ylimus = (0, max_installed_us + 20);
+#     for i = 1:n_users
+#         if i ==1
+#             axUs = Axis(gusers[1,i],
+#                 ylabel = "Capacity [kW]",
+#                 xticks = (1:2, ["CO","NC"]))
+#             ylims!(axUs, ylimus)
+#         else
+#             axUs = Axis(gusers[1,i],
+#                 xticks = (1:2, ["CO","NC"]),
+#                 yticklabelsvisible = false,
+#                 yticksvisible = false)
+#             ylims!(axUs, ylimus)
+#         end
+#         user = user_set[i]
+
+#         hidexdecorations!(axUs, ticks=false, ticklabels=false)
+
+#         Label(gusers[1,i,Top()], user, valign = :bottom, font = :bold, padding = (0, 0, 5, 0))
+
+#         for j = 1:n_resource
+#             installed_CO_NC = (has_asset(users_data[user], asset[j])) ? [x_CO[user, asset[j]],x_NC[user, asset[j]]] : [0.0,0.0]
+#             barplot!(axUs, [1,2], installed_CO_NC,
+#                 gap = 0.05,
+#                 color = colors[j])
+#         end
+#     end
+
+#     Legend(gLegend[1,1], axEC, framevisible = false)
+
+#     asset_string = ""
+#     for j = 1:n_resource
+#         asset_string = asset_string * asset[j] * "_"
+#     end
+#     asset_output_file = asset_string * output_file
+
+#     save(asset_output_file, f)
+# end
 function plot_resource(
     output_file::String,
     asset::Array{String},
@@ -252,70 +334,77 @@ function plot_resource(
 
     max_installed_us_CO = maximum((has_asset(users_data[u], a)) ? x_CO[u,a] : 0.0 for u in user_set for a in asset)
     max_installed_us_NC = maximum((has_asset(users_data[u], a)) ? x_NC[u,a] : 0.0 for u in user_set for a in asset)
-    max_installed_us = max(max_installed_us_CO,max_installed_us_NC)
+    max_installed_us = max(max_installed_us_CO, max_installed_us_NC)
 
-    # Create the grid for the plot
-    f = Figure(size = (1500, 400))
-
-    gEC = f[1,1] = GridLayout()
-    gusers = f[1,2:n_users+1] = GridLayout()
-    gLegend = f[1,n_users+2] = GridLayout()
-
-    # adding barplot for EC
-    axEC = Axis(gEC[1,1],
-        ylabel = "Capacity [kW]",
-        xticks = (1:2, ["CO","NC"]))
+    # Numero totale di subplot: 1 (EC) + n_users + 1 (legend)
+    n_plots = 2 + n_users
     
-    Label(gEC[1,1,Top()], "Community", valign = :bottom, font = :bold, padding = (0, 0, 5, 0))
+    # Create layout
+    p = plot(layout=(1, n_plots), size=(1500, 400), legend=false)
 
+    # ========== Plot EC (prima colonna) ==========
+    # Per ogni risorsa, plotta CO e NC
     for j = 1:n_resource
-        barplot!(axEC, [1,2], [x_CO[EC_CODE, asset[j]],x_NC[EC_CODE, asset[j]]],
-            gap = 0.05,
-            label = asset[j],
-            color = colors[j])
+        bar!(p[1], 
+            [1, 2],  # CO e NC sull'asse x
+            [x_CO[EC_CODE, asset[j]], x_NC[EC_CODE, asset[j]]],
+            color=colors[j],
+            ylabel="Capacity [kW]",
+            title="Community",
+            titlefontsize=10,
+            xticks=([1, 2], ["CO", "NC"]),
+            ylims=(0, :auto),
+            label=asset[j],
+            legend=false,
+            bar_width=0.8/n_resource,
+            bar_position=(j-1)*0.8/n_resource - 0.4 + 0.4/n_resource)
     end
 
-    hidexdecorations!(axEC, ticks=false, ticklabels=false)
-
-    ylims!(axEC, low = 0)
-
-    # adding barplot for users
-
-    ylimus = (0, max_installed_us + 20);
-    for i = 1:n_users
-        if i ==1
-            axUs = Axis(gusers[1,i],
-                ylabel = "Capacity [kW]",
-                xticks = (1:2, ["CO","NC"]))
-            ylims!(axUs, ylimus)
-        else
-            axUs = Axis(gusers[1,i],
-                xticks = (1:2, ["CO","NC"]),
-                yticklabelsvisible = false,
-                yticksvisible = false)
-            ylims!(axUs, ylimus)
-        end
-        user = user_set[i]
-
-        hidexdecorations!(axUs, ticks=false, ticklabels=false)
-
-        Label(gusers[1,i,Top()], user, valign = :bottom, font = :bold, padding = (0, 0, 5, 0))
-
+    # ========== Plot Users ==========
+    for (i, u) in enumerate(user_set)
+        plot_idx = i + 1
+        
+        # Per ogni risorsa, plotta CO e NC
         for j = 1:n_resource
-            installed_CO_NC = (has_asset(users_data[user], asset[j])) ? [x_CO[user, asset[j]],x_NC[user, asset[j]]] : [0.0,0.0]
-            barplot!(axUs, [1,2], installed_CO_NC,
-                gap = 0.05,
-                color = colors[j])
+            installed_CO_NC = (has_asset(users_data[u], asset[j])) ? 
+                [x_CO[u, asset[j]], x_NC[u, asset[j]]] : [0.0, 0.0]
+            
+            bar!(p[plot_idx],
+                [1, 2],  # CO e NC sull'asse x
+                installed_CO_NC,
+                color=colors[j],
+                ylabel=(i == 1 ? "Capacity [kW]" : ""),
+                title=u,
+                titlefontsize=10,
+                xticks=([1, 2], ["CO", "NC"]),
+                ylims=(0, max_installed_us + 20),
+                yticks=(i == 1 ? :auto : false),
+                label=asset[j],
+                legend=false,
+                bar_width=0.8/n_resource,
+                bar_position=(j-1)*0.8/n_resource - 0.4 + 0.4/n_resource)
         end
     end
 
-    Legend(gLegend[1,1], axEC, framevisible = false)
-
-    asset_string = ""
-    for j = 1:n_resource
-        asset_string = asset_string * asset[j] * "_"
+    # ========== Legend (ultima colonna) ==========
+    legend_p = plot(p[n_plots],
+        framestyle=:none,
+        grid=false,
+        showaxis=false)
+    
+    # Add dummy series for legend
+    for (j, a) in enumerate(asset)
+        plot!(legend_p, 
+            [NaN], [NaN],
+            seriestype=:bar,
+            color=colors[j],
+            label=a)
     end
-    asset_output_file = asset_string * output_file
 
-    save(asset_output_file, f)
+    # ========== Save ==========
+    asset_string = join(asset, "_") * "_"
+    asset_output_file = asset_string * output_file
+    savefig(p, asset_output_file)
+    
+    return p
 end
