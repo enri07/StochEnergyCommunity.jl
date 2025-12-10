@@ -1,27 +1,3 @@
-#using StochasticPrograms#master
-#using JuMP
-#using Base.Threads
-#using DataStructures
-#using LinearAlgebra
-#using Parameters
-#using Distributions
-#using Random
-#using JLD2
-#using FileIO
-#using PointEstimateMethod
-#using YAML
-#using DataFrames
-#using CSV
-#using XLSX
-#using Formatting
-# Useful package to built plot
-#using Makie
-#using CairoMakie
-#using ColorSchemes
-#using StochasticPrograms
-
-#import CPLEX
-
 # # Run this script from EnergyCommunity.jl root!!!
 # using Pkg
 # Pkg.activate("examples")
@@ -45,7 +21,9 @@ output_file_combined = "outputs/output_file_SCO.xlsx"  # Output file - model Ene
 output_plot_ren = "outputs/Img/plot_stoch_renewable_assets.png"  # Output png file of plot - renewable assets
 output_plot_batt = "outputs/Img/plot_stoch_battery_assets.png"  # Output png file of plot - battery assets
 
-mkpath("docs/src/examples/outputs/Img")  # create output folder if it does not exist
+# create output folder if it does not exist
+mkpath("outputs/Img")  
+
 # Generate the set of scenarios used to optimize the EC
 scenarios = build_scenarios(input_file)
 ## Model SCO
