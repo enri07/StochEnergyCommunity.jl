@@ -126,7 +126,7 @@ A tuple `(point_load_demand, point_ren_production)` where:
 - `point_ren_production::Dict{String, Dict{String, Array{Float64}}}`: Normalized renewable production 
   multipliers for each user and renewable asset
 """
-function Scenario_eps_Point_Sampler(data_user, uncertain_var; deterministic)
+function Scenario_eps_Point_Sampler(data_user, uncertain_var, deterministic)
 
     point_load_demand = Dict{String,Array{Float64}}() # extracted point for each user
     point_ren_production = Dict{String,Dict{String,Array{Float64}}}() # extracted point for each user and asset
@@ -227,7 +227,7 @@ affected by three levels of uncertainty: long-term, day-ahead, and short-term.
 
 # Arguments
 - `data::Dict{Any, Any}`: Dictionary containing all user, market, and general data
-- `stoch_params::Dict{Any, Any}`: Dictionary containing all stochastic parameters
+- `stoch_data::Dict{Any, Any}`: Dictionary containing all stochastic parameters
 - `point_s_load::Vector{Float64}`: Sampled points for long-term load demand uncertainty (one per scenario s)
 - `point_s_pv::Vector{Float64}`: Sampled points for long-term PV production uncertainty (one per scenario s)
 - `point_s_wind::Vector{Float64}`: Sampled points for long-term wind production uncertainty (one per scenario s)
@@ -239,7 +239,7 @@ affected by three levels of uncertainty: long-term, day-ahead, and short-term.
 
 function scenarios_generator(
 	data::Dict{Any, Any},
-    stoch_params::Dict{Any, Any},
+    stoch_data::Dict{Any, Any},
 	point_s_load::Vector{Float64}, # extracted point for long period uncertainty distribution in load demand
 	point_s_pv::Vector{Float64}, # extracted point for long period uncertainty distribution in PV production
     point_s_wind::Vector{Float64}, # extracted point for long period uncertainty distribution in wind production
@@ -264,12 +264,7 @@ function scenarios_generator(
     # "W": Long-term uncertainty on wind production only
 	uncertain_var = field(stoch_data, "uncertain_var")
 
-    # Is a deterministic optimization
-    if n_scen_s == 1 && n_scen_eps == 1
-        deterministic = true
-    else
-        deterministic = false
-    end
+    deterministic = (n_scen_s == 1 && n_scen_eps == 1)
 
     # Array containing each scenario
     sampled_scenarios = Array{Scenario_Load_Renewable}(undef,n_scen)
@@ -345,30 +340,30 @@ derives the corresponding short-term scenarios. The result is a hierarchical sce
 long-term scenario (s) branches into multiple short-term scenarios (ε).
 
 # Arguments
-- `data::Dict{Any, Any}`: Dictionary containing all user, market, and general data
+- `input_file::String`: Path to the input file containing all user, market, and general data
 
 # Returns
 - `sampled_scenarios::Array{Scenario_Load_Renewable}`: Array of generated scenarios
 """
 
-function build_scenarios(data)
-    
+function build_scenarios(input_file::String)
+    data = read_input(input_file)
     # Extract all data
     (gen_data,
     users_data,
     market_data) = explode_data(data)
 
     # Extract specific stochastic parameters
-    stoch_params = stoch_params(gen_data)
+    stoch_parameters = stoch_params(gen_data)
 
     # Extraction of the points used to sample the distributions associated to the long period uncertainty
     (point_s_load,
     point_s_pv,
     point_s_wind,
-    scen_probability) = pem_extraction(stoch_params)
+    scen_probability) = pem_extraction(stoch_parameters)
 
     # Generate the set of scenarios to initialize the stochastic model
-    sampled_scenarios = scenarios_generator(data, stoch_params,
+    sampled_scenarios = scenarios_generator(data, stoch_parameters,
                               point_s_load,
                               point_s_pv,
                               point_s_wind,

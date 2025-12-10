@@ -9,13 +9,14 @@ data: structure of data
 """
 
 # function build_specific_model!(::AbstractGroupCO, ECModel::AbstractEC,optimizer;
-function build_specific_model!(::AbstractGroupCO, ECModel::StochasticEC;
+function build_specific_model!(::AbstractGroupCO, ECModel::StochasticEC, optimizer;
     control_first_risimulation=false,
     x_fixed=Dict{Tuple{String, String}, Float64}(),
     control_MC=false,
     P_dec_P_fixed=JuMP.Containers.DenseAxisArray([],[]),
     P_dec_N_fixed=JuMP.Containers.DenseAxisArray([],[]))
     
+
     TOL_BOUNDS = 1.05
 
     # get main parameters
@@ -432,6 +433,7 @@ function build_specific_model!(::AbstractGroupCO, ECModel::StochasticEC;
     
     end
 
+    set_optimizer(model,optimizer)
     ECModel.deterministic_model = DEP(model)
 
     return ECModel

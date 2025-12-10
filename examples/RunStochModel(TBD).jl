@@ -45,7 +45,7 @@ output_file_combined = "outputs/output_file_SCO.xlsx"  # Output file - model Ene
 output_plot_combined = "outputs/Img/plot_user_{:s}_SCO.pdf"  # Output png file of plot - model energy community
 
 # Generate the set of scenarios used to optimize the EC
-scenarios = build_scenarios(data)
+scenarios = build_scenarios(input_file)
 
 ## Model CO
 
@@ -54,11 +54,13 @@ scenarios = build_scenarios(data)
 # Read data from excel file
 ECModel_SCO = StochasticEC(input_file, EnergyCommunity.GroupCO(), scenarios, optimizer = HiGHS.Optimizer)
 
+
+
 # build CO model
-build_specific_model!(GroupCO(),ECModel_SCO)
+build_specific_model!(GroupCO(),ECModel_SCO, HiGHS.Optimizer)
 
 # optimize CO model
-optimize!(ECModel)
+optimize_deterministic_ECmodel(ECModel_SCO)
 
 
 # # create plots of CO model
