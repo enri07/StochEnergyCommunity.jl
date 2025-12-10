@@ -60,7 +60,8 @@ examples = [
     "io",
     "electric_vehicle",
     "heating_cooling",
-    "theory_of_games"
+    "theory_of_games",
+    "stochastic"
     # "non_cooperative",
     # "aggregated_non_cooperative",
     # "cooperative",
