@@ -1179,6 +1179,28 @@ function create_example_data(folder; config_name::String = "default")
 end
 
 """
+    create_stoch_example_data(parent_folder, config_name::String = "default")
+
+Create an example data for stochastic version of the Energy Community model.
+This function creates in the specified folder the necessary data to run the stochastic optimization of 
+the Energy Community model, based on the specified configuration name.
+
+## Arguments
+
+* `parent_folder`: Parent folder where the example data will be created
+* `config_name`: Configuration name to be used to create the example data
+    Supported values: "default"
+"""
+function create_stoch_example_data(folder; config_name::String = "default")
+    folder_config = joinpath(@__DIR__, "stochastic", "stoch_data", config_name)
+    if isdir(folder_config)
+        Base.Filesystem.cptree(folder_config, folder; force=true)
+    else
+        throw(ArgumentError("Configuration name $config_name not supported."))
+    end
+end
+
+"""
     set_parameters_ECmodel!(ECModel::AbstractEC, tol=1e-3, time_limit=3600, threads=1, verbosity=0)
 
 Configure solver parameters for both stochastic and deterministic optimization models.
