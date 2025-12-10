@@ -284,9 +284,7 @@ function ModelEC(file_name::AbstractString,
 end
 
 """
-    StochasticEC(file_name::AbstractString, group_type, optimizer=nothing,
-                scenarios=[zero(Scenario_Load_Renewable)],
-                n_scen_s::Int=1, n_scen_eps::Int=1)
+    StochasticEC(file_name::AbstractString, group_type, optimizer=nothing)
 
 Load EnergyCommunity stochastic model from disk
 
@@ -295,20 +293,44 @@ Load EnergyCommunity stochastic model from disk
 * `file_name::AbstractString`: name of the file to load the data
 * `group_type`: aggregation type of model
 * `optimizer`: optimizer of the JuMP model
-* `scenarios::Vector{Scenario_Load_Renewable}`: scenarios used to optimize the model
-* `n_scen_s::Int`: number of long-term scenarios
-* `n_scen_eps::Int`: number of short-term scenarios
 """
 function StochasticEC(file_name::AbstractString,
         group_type,
-        optimizer=nothing,
-        scenarios::Array{Scenario_Load_Renewable, 1}=[zero(Scenario_Load_Renewable)],
-        n_scen_s::Int=1,
-        n_scen_eps::Int=1
+        optimizer=nothing
     )
 
     data = read_input(file_name)
     user_set = user_names(general(data), users(data))
+
+    StochasticEC(data, group_type, optimizer, user_set, scenarios, n_scen_s, n_scen_eps)
+end
+
+"""
+    StochasticEC(file_name::AbstractString, group_type, scenarios, optimizer=nothing)
+
+Load EnergyCommunity stochastic model from disk with an already pre-defined set of scenarios
+
+## Arguments
+
+* `file_name::AbstractString`: name of the file to load the data
+* `group_type`: aggregation type of model
+* `scenarios`: scenarios used to optimize the model
+* `optimizer`: optimizer of the JuMP model
+"""
+function StochasticEC(file_name::AbstractString,
+        group_type,
+        scenarios,
+        optimizer=nothing
+    )
+
+    data = read_input(file_name)
+    user_set = user_names(general(data), users(data))
+
+    # Extract number of scenarios
+    stoch_params = stoch_params(general(data))
+
+	n_scen_s = field(stoch_params, "n_s") # number of long period scenarios
+    n_scen_eps = field(stoch_params, "n_eps") # number of long period scenarios
 
     StochasticEC(data, group_type, optimizer, user_set, scenarios, n_scen_s, n_scen_eps)
 end
