@@ -60,203 +60,203 @@ build_specific_model!(GroupCO(),ECModel_SCO)
 # optimize CO model
 optimize!(ECModel)
 
-"""
-# create plots of CO model
-plot(ECModel, output_plot_combined)
 
-# print summary
-print_summary(ECModel)
+# # create plots of CO model
+# plot(ECModel, output_plot_combined)
 
-# save summary data
-save_summary(ECModel, output_file_combined)
+# # print summary
+# print_summary(ECModel)
 
-# Plot sankey plot of CO model
-plot_sankey(ECModel)
+# # save summary data
+# save_summary(ECModel, output_file_combined)
 
-# DataFrame of the business plan
-business_plan(ECModel)
+# # Plot sankey plot of CO model
+# plot_sankey(ECModel)
 
-# plot 20 years business plan of CO model
-business_plan_plot(ECModel)
+# # DataFrame of the business plan
+# business_plan(ECModel)
 
-## Model NC
+# # plot 20 years business plan of CO model
+# business_plan_plot(ECModel)
 
-# create NonCooperative model
-NC_Model = ModelEC(ECModel, EnergyCommunity.GroupNC())
+# ## Model NC
 
-# build NC model
-build_model!(NC_Model)
+# # create NonCooperative model
+# NC_Model = ModelEC(ECModel, EnergyCommunity.GroupNC())
 
-# optimize NC model
-optimize!(NC_Model)
+# # build NC model
+# build_model!(NC_Model)
 
-# create plots of NC model
-plot(NC_Model, output_plot_isolated)
+# # optimize NC model
+# optimize!(NC_Model)
 
-# print summary of NC model
-print_summary(NC_Model)
+# # create plots of NC model
+# plot(NC_Model, output_plot_isolated)
 
-# save summary of NC model
-save_summary(NC_Model, output_file_isolated)
+# # print summary of NC model
+# print_summary(NC_Model)
 
-# plot Sankey plot of NC model
-plot_sankey(NC_Model)
+# # save summary of NC model
+# save_summary(NC_Model, output_file_isolated)
 
-# DataFrame of the business plan of NC model
-business_plan(NC_Model)
+# # plot Sankey plot of NC model
+# plot_sankey(NC_Model)
 
-# plot business plan of NC model
-business_plan_plot(NC_Model)
+# # DataFrame of the business plan of NC model
+# business_plan(NC_Model)
 
-
+# # plot business plan of NC model
+# business_plan_plot(NC_Model)
 
 
 
 
-# Data extraction
-file_name = "./src/stochastic/stoch_data/energy_community_model.yml"
-data = read_input(file_name)
-
-(gen_data,
-  users_data,
-  market_data) = explode_data(data)
 
 
-n_users = length(user_names(gen_data, users_data))
-init_step = field(gen_data, "init_step")
-final_step = field(gen_data, "final_step")
-n_steps = final_step - init_step + 1
-project_lifetime = field(gen_data, "project_lifetime")
-peak_categories = profile(market_data, "peak_categories")
+# # Data extraction
+# file_name = "./src/stochastic/stoch_data/energy_community_model.yml"
+# data = read_input(file_name)
 
-# Set definitions
-user_set = user_names(gen_data, users_data)
-year_set = 1:project_lifetime
-time_set = 1:n_steps
-peak_set = unique(peak_categories)
+# (gen_data,
+#   users_data,
+#   market_data) = explode_data(data)
 
-# Number of scenarios to be extracted
-scen_s_sample = field(gen_data, "n_s")
-scen_eps_sample = field(gen_data, "n_eps")
-n_scen_sample = scen_s_sample * scen_eps_sample
 
-isdet = false
-if scen_eps_sample == 1 && scen_s_sample == 1
-  isdet = true
-end
+# n_users = length(user_names(gen_data, users_data))
+# init_step = field(gen_data, "init_step")
+# final_step = field(gen_data, "final_step")
+# n_steps = final_step - init_step + 1
+# project_lifetime = field(gen_data, "project_lifetime")
+# peak_categories = profile(market_data, "peak_categories")
 
-scen_s_set = 1:scen_s_sample
-scen_eps_set = 1:scen_eps_sample
+# # Set definitions
+# user_set = user_names(gen_data, users_data)
+# year_set = 1:project_lifetime
+# time_set = 1:n_steps
+# peak_set = unique(peak_categories)
 
-# Standard deviation associated with load and renewable production in long period uncertainty
+# # Number of scenarios to be extracted
+# scen_s_sample = field(gen_data, "n_s")
+# scen_eps_sample = field(gen_data, "n_eps")
+# n_scen_sample = scen_s_sample * scen_eps_sample
 
-sigma_load = 0.3
+# isdet = false
+# if scen_eps_sample == 1 && scen_s_sample == 1
+#   isdet = true
+# end
 
-mean_pv = 1.0
-sigma_pv = 0.1
+# scen_s_set = 1:scen_s_sample
+# scen_eps_set = 1:scen_eps_sample
 
-mean_wind = 0.95
-sigma_wind = 0.15
+# # Standard deviation associated with load and renewable production in long period uncertainty
 
-# Extract Uncertain Variable
-unc_var = field(gen_data, "uncertain_var")
+# sigma_load = 0.3
 
-# Extraction of the point used to sample the distributions associated to the long period uncertainty
-(point_s_load,
-  point_s_pv,
-  point_s_wind,
-  scen_probability) = pem_extraction(scen_s_sample, 
-                        sigma_load, 
-                        mean_pv,
-                        sigma_pv,
-                        mean_wind,
-                        sigma_wind,
-                        unc_var)
+# mean_pv = 1.0
+# sigma_pv = 0.1
 
-# Include the sampler for distributions associated to short period uncertainty and a function to generate scenarios (new version: sample the normalized distributions)
+# mean_wind = 0.95
+# sigma_wind = 0.15
 
-# include("point_Scen_eps_sampler.jl")
+# # Extract Uncertain Variable
+# unc_var = field(gen_data, "uncertain_var")
 
-# To define an empty stochastic model we have to declare previously the scenarios
+# # Extraction of the point used to sample the distributions associated to the long period uncertainty
+# (point_s_load,
+#   point_s_pv,
+#   point_s_wind,
+#   scen_probability) = pem_extraction(scen_s_sample, 
+#                         sigma_load, 
+#                         mean_pv,
+#                         sigma_pv,
+#                         mean_wind,
+#                         sigma_wind,
+#                         unc_var)
 
-# OUTPUT: sampled_scenarios: array containing all the scenarios created for the first phase
-#         point_eps_load_sampled: extracted points for the normalized distributions associated with load demand
-#         point_eps_ren_sampled: extracted points for the normalized distributions associated with renewable production
+# # Include the sampler for distributions associated to short period uncertainty and a function to generate scenarios (new version: sample the normalized distributions)
 
-sampled_scenarios = scenarios_generator(data,
-                              point_s_load,
-                              point_s_pv,
-                              point_s_wind,
-                              scen_s_sample,
-                              scen_eps_sample,
-                              unc_var,
-                              point_probability=scen_probability,
-                              first_stage=true,
-                              deterministic=isdet)
+# # include("point_Scen_eps_sampler.jl")
 
-# Initialize the empty non-cooperative version of a EC
+# # To define an empty stochastic model we have to declare previously the scenarios
 
-EC_NonCooperative = StochasticEC(file_name,GroupNC(),CPLEX.Optimizer,sampled_scenarios,scen_s_sample,scen_eps_sample)
+# # OUTPUT: sampled_scenarios: array containing all the scenarios created for the first phase
+# #         point_eps_load_sampled: extracted points for the normalized distributions associated with load demand
+# #         point_eps_ren_sampled: extracted points for the normalized distributions associated with renewable production
 
-# Build the NC model
+# sampled_scenarios = scenarios_generator(data,
+#                               point_s_load,
+#                               point_s_pv,
+#                               point_s_wind,
+#                               scen_s_sample,
+#                               scen_eps_sample,
+#                               unc_var,
+#                               point_probability=scen_probability,
+#                               first_stage=true,
+#                               deterministic=isdet)
 
-build_base_model!(EC_NonCooperative,CPLEX.Optimizer)
+# # Initialize the empty non-cooperative version of a EC
 
-# set the technical paraters for the NC optimization
-time_lim = 60 * 60 * 10  # max time in second
-primal_gap = 1e-2 # primal gap (1e-4 = 1%)
-n_threads = 64 # number of threads to be used
+# EC_NonCooperative = StochasticEC(file_name,GroupNC(),CPLEX.Optimizer,sampled_scenarios,scen_s_sample,scen_eps_sample)
 
-set_parameters_ECmodel!(EC_NonCooperative,primal_gap,time_lim,n_threads,1)
+# # Build the NC model
 
-optimize_deterministic_ECmodel(EC_NonCooperative) # optimize the deterministic equivalent version and store the results
+# build_base_model!(EC_NonCooperative,CPLEX.Optimizer)
 
-# save the data of the first stage model
-output_file_NC = "first_stage_output_NC_($scen_s_sample,$scen_eps_sample)"
+# # set the technical paraters for the NC optimization
+# time_lim = 60 * 60 * 10  # max time in second
+# primal_gap = 1e-2 # primal gap (1e-4 = 1%)
+# n_threads = 64 # number of threads to be used
 
-print_first_stage(output_file_NC * ".xlsx",EC_NonCooperative)
-save(output_file_NC * ".jld2", EC_NonCooperative)
+# set_parameters_ECmodel!(EC_NonCooperative,primal_gap,time_lim,n_threads,1)
 
-# get the number of installed resource by users
-x_NC_fixed = EC_NonCooperative.results[:x_us].data
+# optimize_deterministic_ECmodel(EC_NonCooperative) # optimize the deterministic equivalent version and store the results
 
-# add the installed capacity of the entire EC
-x_tot_NC = calculate_x_tot(EC_NonCooperative)
+# # save the data of the first stage model
+# output_file_NC = "first_stage_output_NC_($scen_s_sample,$scen_eps_sample)"
 
-#Free memory
-EC_NonCooperative = StochasticEC();
+# print_first_stage(output_file_NC * ".xlsx",EC_NonCooperative)
+# save(output_file_NC * ".jld2", EC_NonCooperative)
 
-GC.gc() # garbage collector
+# # get the number of installed resource by users
+# x_NC_fixed = EC_NonCooperative.results[:x_us].data
 
-# Initialize the cooperative version of a EC
+# # add the installed capacity of the entire EC
+# x_tot_NC = calculate_x_tot(EC_NonCooperative)
 
-EC_Cooperative = StochasticEC(file_name,GroupCO(),CPLEX.Optimizer,sampled_scenarios,scen_s_sample,scen_eps_sample)
+# #Free memory
+# EC_NonCooperative = StochasticEC();
 
-# Build the CO model
+# GC.gc() # garbage collector
 
-build_specific_model!(GroupCO(),EC_Cooperative,CPLEX.Optimizer)
+# # Initialize the cooperative version of a EC
 
-# set the technical parameters for the CO optimization
-time_lim = 60 * 60 * 24 # max time in second
-primal_gap = 1e-2 # primal gap (1e-4 = 1%)
-n_threads = 64 # number of threads to be used
+# EC_Cooperative = StochasticEC(file_name,GroupCO(),CPLEX.Optimizer,sampled_scenarios,scen_s_sample,scen_eps_sample)
 
-set_parameters_ECmodel!(EC_Cooperative,primal_gap,time_lim,n_threads,1)
+# # Build the CO model
 
-optimize_deterministic_ECmodel(EC_Cooperative) # optimize the deterministic equivalent version and store the results
+# build_specific_model!(GroupCO(),EC_Cooperative,CPLEX.Optimizer)
 
-# save the data of the first stage model
-output_file_CO = "first_stage_output_CO_($scen_s_sample,$scen_eps_sample)"
-print_first_stage(output_file_CO * ".xlsx",EC_Cooperative)
-save(output_file_CO * ".jld2", EC_Cooperative)
-# get the number of installed resource by users
-x_CO_fixed = EC_Cooperative.results[:x_us].data
+# # set the technical parameters for the CO optimization
+# time_lim = 60 * 60 * 24 # max time in second
+# primal_gap = 1e-2 # primal gap (1e-4 = 1%)
+# n_threads = 64 # number of threads to be used
 
-# Plot some useful image of the installed capacity
-colors = Makie.wong_colors()
+# set_parameters_ECmodel!(EC_Cooperative,primal_gap,time_lim,n_threads,1)
 
-# add the installed capacity of the entire EC
-x_tot_CO = calculate_x_tot(EC_Cooperative)
+# optimize_deterministic_ECmodel(EC_Cooperative) # optimize the deterministic equivalent version and store the results
 
-plot_resource("installed_capacity1_($scen_s_sample,$scen_eps_sample).png",["PV","wind"],users_data,x_tot_CO,x_tot_NC,colors[1:2]) # renewable asset
-plot_resource("installed_capacity_($scen_s_sample,$scen_eps_sample).png",["batt"],users_data,x_tot_CO,x_tot_NC,[colors[3]]) #battery
+# # save the data of the first stage model
+# output_file_CO = "first_stage_output_CO_($scen_s_sample,$scen_eps_sample)"
+# print_first_stage(output_file_CO * ".xlsx",EC_Cooperative)
+# save(output_file_CO * ".jld2", EC_Cooperative)
+# # get the number of installed resource by users
+# x_CO_fixed = EC_Cooperative.results[:x_us].data
+
+# # Plot some useful image of the installed capacity
+# colors = Makie.wong_colors()
+
+# # add the installed capacity of the entire EC
+# x_tot_CO = calculate_x_tot(EC_Cooperative)
+
+# plot_resource("installed_capacity1_($scen_s_sample,$scen_eps_sample).png",["PV","wind"],users_data,x_tot_CO,x_tot_NC,colors[1:2]) # renewable asset
+# plot_resource("installed_capacity_($scen_s_sample,$scen_eps_sample).png",["batt"],users_data,x_tot_CO,x_tot_NC,[colors[3]]) #battery
