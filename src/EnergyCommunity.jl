@@ -42,8 +42,6 @@ module EnergyCommunity
     include("stochastic/point_Scen_eps_sampler.jl")
     # scenario definition
     include("stochastic/scenario_definition.jl")
-    # point estimation method functions
-    include("stochastic/pem_extraction.jl")
 
     # EC model definition
     include("ECModel_definitions.jl")
