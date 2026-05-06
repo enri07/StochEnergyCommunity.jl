@@ -1,5 +1,5 @@
 using EnergyCommunity, JuMP, Plots
-using Test, FileIO, HiGHS, MathOptInterface, TheoryOfGames, YAML
+using Test, FileIO, HiGHS, MathOptInterface, TheoryOfGames, YAML, JLD2
 using ReferenceTests
 
 # needed to avoid problems with qt when plotting
@@ -53,6 +53,41 @@ end
             end
         end
     end
+end
+
+@testset "Input/output functions" begin
+
+    fp_input = input_tests["base_case"]
+    fp_output = "results/co_model.jld2"
+
+    @testset "Save empty model" begin
+        ECModel = ModelEC(fp_input, GroupCO(), OPTIMIZER)
+        save(fp_output, ECModel)
+        @test isfile(fp_output)
+        ECModel_loaded = load!(fp_output, ModelEC())
+        @test Set(get_user_set(ECModel_loaded)) == Set(get_user_set(ECModel))
+    end
+
+    @testset "Save built model" begin
+        ECModel = ModelEC(fp_input, GroupCO(), OPTIMIZER)
+        build_model!(ECModel)
+        save(fp_output, ECModel)
+        @test isfile(fp_output)
+        ECModel_loaded = load!(fp_output, ModelEC())
+        @test Set(get_user_set(ECModel_loaded)) == Set(get_user_set(ECModel))
+    end
+
+    @testset "Save optimized model" begin
+        ECModel = ModelEC(fp_input, GroupCO(), OPTIMIZER)
+        build_model!(ECModel)
+        optimize!(ECModel)
+        save(fp_output, ECModel)
+        @test isfile(fp_output)
+        ECModel_loaded = load!(fp_output, ModelEC())
+        @test Set(get_user_set(ECModel_loaded)) == Set(get_user_set(ECModel))
+    end
+
+
 end
 
 @testset "TheoryOfGames.jl interaction" begin

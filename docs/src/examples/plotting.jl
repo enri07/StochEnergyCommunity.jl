@@ -1,7 +1,7 @@
 # # Plotting
 # This example showcase the plotting capabilities native to the EnergyCommunity.jl package. The package allows to create various plots to visualize the results of the energy community optimization problems, such as time series plots of energy production and consumption, as well as sankey diagrams to illustrate the flow of energy within the community. Moreover, by leveraging on additional packages, it is possible to extend the functionalities and perform additional plots.
 
-## Initialization of the model
+# ## Initialization of the model
 
 # Import the needed packages
 using EnergyCommunity, JuMP
@@ -35,7 +35,9 @@ objective_value(CO_Model)
 # ## Plots of dispatch
 
 # Create plots of the dispatch of resources by user and save them to disk
-plot(CO_Model, output_plot_isolated)
+all_plots = plot(CO_Model, output_plot_isolated)
+user_to_plot = 3  # select user to plot
+plot(all_plots[user_to_plot, 3])  # show the plot of user 3 (top: power dispatch, bottom: battery storage)
 
 # ## Sankey plots
 

@@ -6,7 +6,7 @@
 # - Saving and loading the model to/from jld2 files, so that any intermediate results can be stored and retrieved later on without the need to re-optimize the model.
 # In the example below, we consider a Cooperative (CO) energy community optimization problem and showcase the opportunities related to input/output operations; for plotting, see the other example.
 
-## Initialization of the model
+# ## Initialization of the model
 
 # Import the needed packages
 using EnergyCommunity, JuMP
@@ -48,12 +48,12 @@ save_summary(CO_Model, output_file_isolated)
 # DataFrame of the business plan
 business_plan(CO_Model)
 
-# ## Save the EnergyCommunity.jl model to disk
+# ## Save the model to disk
 
 # save the model to a jld2 file, to store the whole object
 save("co_model.jld2", CO_Model)
 
-# ## Load the EnergyCommunity.jl model from disk
+# ## Load the model from disk
 
 # read the loaded model from the jld2 file
 CO_Model_loaded = load!("co_model.jld2", ModelEC())
